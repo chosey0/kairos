@@ -141,7 +141,9 @@ K candidates = [8, 12, 16, 24, 32]   # 로드맵 Phase 1 K sweep
 baseline 구현 sweep = [8, 16, 32]    # 02_tokenizer_baselines.ipynb
 ```
 
-step-02 baseline 결과 전 dataset에서 `kmeans K=32`가 reconstruction 기준 최선이었고 dead token 0, effective vocab 24~30이었다. 따라서 VQ 계열의 주 비교점은 `K=32`로 두되, 최종 K 결정은 VQ 단계 validation 결과로 한다.
+step-02 baseline 결과 전 dataset에서 `kmeans K=32`가 reconstruction 기준 최선이었고 dead token 0, effective vocab 24~30이었다. step-03 final gate(`cfg-d59bafed`)에서는 같은 boundary-aware wrapper 아래 `vqvae_latent_kmeans`, `fsq`, `bsq`, `coarse_fine`을 비교했다. 신경망 후보 3개는 reconstruction, seed stability, token usage에서 KMeans-B를 이기지 못했고, `coarse_fine`만 reconstruction을 크게 희생하면서 seed stability와 effective vocab을 개선했다.
+
+따라서 shape reconstruction용 주 tokenizer는 `kmeans_boundary_aware K=32`로 둔다. `coarse_fine`은 최종 shape tokenizer가 아니라 Phase 3 motif 단계의 low-resolution sequence ablation으로만 유지한다.
 
 ## 반드시 필요한 baseline
 
@@ -230,10 +232,10 @@ input:
   shape core (s1, s2) = (logit λ_o, logit λ_c)  # winsorize + logit
 
 model:
-  VQ 계열 tokenizer (VQ-VAE, FSQ/LFQ) 후보
+  kmeans_boundary_aware K=32
 
 baselines:
-  k-means (주 baseline: K=32), GMM, hand-crafted lambda bins
+  GMM, hand-crafted lambda bins, VQ-VAE latent KMeans, FSQ, BSQ, coarse-fine
 
 boundary:
   비교군 B — interior-only codebook fit + boundary discrete token 8 + zero-range special token
@@ -247,3 +249,17 @@ analysis output:
   token stability metrics
 ```
 
+Step-03 final gate 판정:
+
+```text
+main tokenizer:
+  kmeans_boundary_aware K=32
+
+rejected as main shape tokenizer:
+  vqvae_latent_kmeans
+  fsq(levels=[6,5])
+  bsq(bits=5)
+
+carry-forward ablation:
+  coarse_fine(coarse 8 x fine 4)  # Phase 3 motif에서 저해상도 sequence로만 재평가
+```

@@ -183,6 +183,17 @@ neural:    VQ-VAE
 optional:  SOM
 ```
 
+Step-03 최종 timebox 검증(2026-07-07 완료): `kmeans_boundary_aware K=32`를 주 baseline으로 두고,
+`vqvae_latent_kmeans`, `fsq(levels=[6,5])`, `bsq(bits=5)`,
+`coarse_fine(coarse 8 x fine 4)`를 같은 boundary-aware vocabulary wrapper로 비교한다.
+추가 hyperparameter sweep 없이 D1 daily 4개, D1 KR 1m 2개, D2 KR 2개와 seeds
+`7/17/37`만 실행했다. 결과는
+`notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-03-vq-tokenizer/all-datasets-multi/cfg-d59bafed/RESULTS_EXPLANATION.md`
+에 기록했다. `vqvae_latent_kmeans`, `fsq`, `bsq`는 reconstruction, seed stability, token usage에서
+주 baseline을 이기지 못했다. `coarse_fine`은 reconstruction에서는 크게 열세지만 seed stability와
+effective vocab size에서 개선을 보여 완전 폐기하지 않고 Phase 3 motif의 low-resolution sequence
+ablation으로 넘긴다. Phase 1의 shape reconstruction용 main tokenizer는 `kmeans_boundary_aware K=32`로 둔다.
+
 작업:
 - Stage D1(단일 지수)에서 시작해 설계를 확정하고, D2/D3 확장 시 재학습과 vocabulary 매핑 비교를 수행한다.
 - K sweep: 8, 12, 16, 24, 32 (계층형은 coarse 8 × fine 8 형태로 등가 용량 비교). baseline 단계(step-02)는 8/16/32로 구현되었고, 전 dataset에서 kmeans K=32가 reconstruction 기준 최선이라 후속 VQ 비교의 주 baseline은 `kmeans K=32`다.
@@ -195,6 +206,8 @@ optional:  SOM
 게이트(go/no-go):
 - VQ 계열이 k-means 대비 이점(복원 오차, transfer, 안정성 중 1개 이상)을 못 보이면 k-means를 채택하고 진행한다. 연구 실패가 아니라 tokenizer 단순화 결정이다.
 - effective vocab size가 K의 1/4 이하면 K 또는 feature 설계를 재검토한다.
+- Step-03 final gate 판정: 신경망 VQ 후보(`vqvae_latent_kmeans`, `fsq`, `bsq`)는 no-go. `coarse_fine`은
+  reconstruction tokenizer로는 no-go지만 stability/usage 개선이 있으므로 Phase 3 motif ablation으로만 유지한다.
 
 ## Phase 2. Token Sequence Corpus와 Label
 

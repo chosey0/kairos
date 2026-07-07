@@ -22,16 +22,19 @@ VQ-VAE codebook이 반복 가능한 candle shape prototype을 학습하는가?
 
 이 질문에 답하기 전에는 `shape_token_t1`을 prediction target으로 사용하는 후속 모델의 의미가 약하다.
 
-## 진행 현황 (2026-07-06 기준)
+## 진행 현황 (2026-07-07 기준)
 
 | 단계 | Notebook | 상태 | 결과 기록 |
 | --- | --- | --- | --- |
 | Phase 0 데이터 품질 | `00_data_protocol.ipynb` | 완료 | protocol JSON, step-01 run |
 | Phase 1 shape 좌표 | `01_shape_feature_validation.ipynb` | 완료 | `notebooks/runs/.../step-01-shape-feature-validation/FIGURE_EXPLANATION.md` |
 | Phase 2 baseline clustering | `02_tokenizer_baselines.ipynb` | 완료 (D1 6개 + D2 KR 2개) | `notebooks/runs/.../step-02-tokenizer-baselines/RESULTS_EXPLANATION.md` |
-| Phase 3 VQ 계열 검증 | `03_vq_tokenizer.ipynb` | 예정 | - |
+| Phase 3 VQ 계열 검증 | `03_vq_tokenizer.ipynb` | 완료 | `notebooks/runs/.../step-03-vq-tokenizer/all-datasets-multi/cfg-d59bafed/RESULTS_EXPLANATION.md` |
+| Phase 4 Baseline 대비 채택 판단 | 문서 판정 | 완료 | main tokenizer는 `kmeans_boundary_aware K=32`, `coarse_fine`은 Phase 3 motif ablation으로 보류 |
 
 Phase 2까지의 핵심 결정: 주 baseline은 `kmeans K=32`(전 dataset·정책에서 최선, dead token 0), boundary는 비교군 B(경계 조합 8개 discrete token + interior-only 연속 codebook), 분봉은 minute split(train 2025-07~2026-01) 적용.
+
+Phase 3/4 판정: `vqvae_latent_kmeans`, `fsq`, `bsq`는 KMeans-B 대비 이점을 보이지 못했다. `coarse_fine`은 reconstruction을 희생하지만 seed stability와 effective vocab을 개선했으므로 주 tokenizer로 채택하지 않고 motif 단계의 low-resolution sequence 후보로만 유지한다.
 
 ## 검증할 전제
 
@@ -201,27 +204,35 @@ seeds = 7, 17, 37
 
 결과 요약: 8개 dataset(D1 daily 4, D1 KR 1m 2, D2 KR 2) 전부에서 `kmeans K=32`가 최선, dead token 0. 상세는 `notebooks/runs/.../step-02-tokenizer-baselines/RESULTS_EXPLANATION.md`.
 
-### Phase 3. VQ-VAE tokenizer 검증
+### Phase 3. VQ 계열 tokenizer 검증
 
-실험 (예정: `03_vq_tokenizer.ipynb`):
+실험 (구현: `03_vq_tokenizer.ipynb`, 완료):
 
 ```text
-K = [8, 12, 16, 24, 32]   # 로드맵 Phase 1 K sweep 기준, 주 비교점은 baseline과 같은 K=32
 input = (s1, s2) = (logit λ_o, logit λ_c)
-output = reconstructed (s1, s2)
-token = nearest codebook index
+models = [
+  kmeans_boundary_aware K=32,
+  vqvae_latent_kmeans K=32,
+  fsq levels=[6,5]          # continuous capacity 30
+  bsq bits=5                # continuous capacity 32
+  coarse_fine 8 x 4         # continuous capacity 32
+]
 boundary = 비교군 B (interior-only fit + boundary discrete token 8)
+seeds = [7, 17, 37]
 ```
 
 평가:
-- reconstruction MAE/MSE
-- derived 4D feature MAE
+- reconstruction MSE
 - token utilization
 - effective vocab size
 - dead token count
-- prototype visualization
-- held-out index reconstruction error
-- seed stability after prototype matching
+- D2 symbol별 token share
+- seed stability
+
+결과:
+- reconstruction은 8개 dataset 전부에서 `kmeans_boundary_aware K=32`가 최선이다.
+- `vqvae_latent_kmeans`, `fsq`, `bsq`는 seed stability와 token usage에서도 주 baseline을 이기지 못했다.
+- `coarse_fine`은 seed stability와 effective vocab은 개선하지만 reconstruction MSE가 크게 악화된다.
 
 ### Phase 4. Baseline 대비 채택 판단
 
@@ -243,6 +254,23 @@ VQ-VAE를 tokenizer로 채택하려면 다음 중 최소 하나 이상을 보여
 4. prototype이 중복되거나 사람이 해석하기 어렵다.
 5. held-out index에서 token usage가 붕괴한다.
 ```
+
+판정(2026-07-07):
+
+```text
+main tokenizer:
+  kmeans_boundary_aware K=32
+
+do not tune further in Phase 1:
+  vqvae_latent_kmeans
+  fsq(levels=[6,5])
+  bsq(bits=5)
+
+carry to motif-stage ablation only:
+  coarse_fine(coarse 8 x fine 4)
+```
+
+이 결정은 VQ 계열이 연구 실패라는 뜻이 아니라, Phase 1의 단일 candle shape reconstruction 목적에서는 단순 KMeans-B가 더 강한 baseline이라는 뜻이다.
 
 ## 평가 지표
 
