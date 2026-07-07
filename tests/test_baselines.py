@@ -7,9 +7,15 @@ import pytest
 from kairos.experiments.protocol import SPLIT_PROTOCOL_MINUTE
 from kairos.experiments.shape_tokenizer.baselines import (
     MERGED_FEATURE_INPUTS,
+    assign_boundary_aware_tokens,
+    boundary_aware_fit_rows,
+    boundary_axis,
+    boundary_cell,
+    build_boundary_aware_vocabulary,
     dataset_interval,
     evaluate_baselines,
     finite_shape_rows,
+    fit_boundary_aware_kmeans,
     handcrafted_lambda_bins,
     read_merged_shape_rows,
     reconstruction_mse,
@@ -73,6 +79,76 @@ def test_shape_rows_for_boundary_policy_can_exclude_boundary_rows() -> None:
     assert len(included) == 2
     assert len(excluded) == 1
     assert not excluded[0]["is_boundary"]
+
+
+def test_boundary_classifier_uses_low_interior_high_cells() -> None:
+    assert boundary_axis(0.001, eps=0.001) == "low"
+    assert boundary_axis(0.0011, eps=0.001) == "interior"
+    assert boundary_axis(0.9989, eps=0.001) == "interior"
+    assert boundary_axis(0.999, eps=0.001) == "high"
+    assert boundary_cell(shape_row(1, 0.0, 0.0, 0.0, 1.0), eps=0.001) == ("low", "high")
+
+
+def test_boundary_aware_vocabulary_size_and_offsets() -> None:
+    vocabulary = build_boundary_aware_vocabulary(32)
+
+    assert vocabulary.continuous_codebook_size == 32
+    assert vocabulary.boundary_token_offset == 32
+    assert len(vocabulary.boundary_tokens) == 8
+    assert vocabulary.zero_range_token == 40
+    assert vocabulary.size == 41
+    assert ("interior", "interior") not in vocabulary.boundary_tokens
+
+
+def test_boundary_aware_assignment_gives_every_row_a_token() -> None:
+    vocabulary = build_boundary_aware_vocabulary(2)
+    rows = [
+        shape_row(1, 0.0, 0.0, 0.5, 0.5),
+        shape_row(2, -6.9, 6.9, 0.0, 1.0, boundary=True),
+        shape_row(3, 0.0, 0.0, 0.5, 0.5, zero=True),
+        shape_row(4, 0.1, 0.2, 0.7, 0.7),
+    ]
+
+    tokens = assign_boundary_aware_tokens(
+        rows,
+        interior_tokens=np.array([1, 0]),
+        vocabulary=vocabulary,
+    )
+
+    assert tokens.tolist() == [1, vocabulary.boundary_tokens[("low", "high")], vocabulary.zero_range_token, 0]
+    assert all(token >= 0 for token in tokens)
+
+
+def test_boundary_aware_fit_rows_use_only_finite_interior_rows() -> None:
+    rows = [
+        shape_row(1, 0.0, 0.0, 0.5, 0.5),
+        shape_row(2, -6.9, 6.9, 0.0, 1.0, boundary=True),
+        shape_row(3, 0.0, 0.0, 0.5, 0.5, zero=True),
+    ]
+
+    fit_rows = boundary_aware_fit_rows(rows)
+
+    assert fit_rows == [rows[0]]
+
+
+def test_fit_boundary_aware_kmeans_preserves_all_rows() -> None:
+    rows = [
+        shape_row(day, float(day % 2), float((day + 1) % 2), 0.3 + (day % 2) * 0.3, 0.4)
+        for day in range(1, 10)
+    ]
+    rows += [
+        shape_row(10, -6.9, 6.9, 0.0, 1.0, boundary=True),
+        shape_row(11, 0.0, 0.0, 0.5, 0.5, zero=True),
+    ]
+
+    tokens, recon, vocabulary = fit_boundary_aware_kmeans(rows, codebook_size=2, seed=7)
+
+    assert len(tokens) == len(rows)
+    assert recon.shape == (len(rows), 2)
+    assert tokens[-2] == vocabulary.boundary_tokens[("low", "high")]
+    assert tokens[-1] == vocabulary.zero_range_token
+    assert not np.isnan(recon[:-2]).any()
+    assert np.isnan(recon[-2:]).all()
 
 
 def test_split_masks_and_mse() -> None:

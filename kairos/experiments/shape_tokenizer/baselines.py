@@ -80,6 +80,30 @@ CODEBOOK_SIZES = (8, 16, 32)
 HANDCRAFTED_BINS_PER_AXIS = 4
 MIN_TRAIN_ROWS = max(CODEBOOK_SIZES)
 BOUNDARY_POLICIES = ("include_boundary", "exclude_boundary")
+BoundaryAxis = Literal["low", "interior", "high"]
+BoundaryCell = tuple[BoundaryAxis, BoundaryAxis]
+BOUNDARY_CELLS: tuple[BoundaryCell, ...] = (
+    ("low", "low"),
+    ("low", "interior"),
+    ("low", "high"),
+    ("interior", "low"),
+    ("interior", "high"),
+    ("high", "low"),
+    ("high", "interior"),
+    ("high", "high"),
+)
+
+
+@dataclass(frozen=True, slots=True)
+class BoundaryAwareVocabulary:
+    continuous_codebook_size: int
+    boundary_token_offset: int
+    zero_range_token: int
+    boundary_tokens: dict[BoundaryCell, int]
+
+    @property
+    def size(self) -> int:
+        return self.continuous_codebook_size + len(self.boundary_tokens) + 1
 
 
 def latest_feature_run(runs_root: Path, feature_input: FeatureInput) -> Path:
@@ -153,6 +177,119 @@ def shape_rows_for_boundary_policy(
     if boundary_policy == "exclude_boundary":
         return [row for row in finite_rows if not row["is_boundary"]]
     raise ValueError(f"unsupported boundary policy: {boundary_policy}")
+
+
+def boundary_axis(value: float, *, eps: float = 1e-3) -> BoundaryAxis:
+    if not 0.0 < eps < 0.5:
+        raise ValueError("eps must be in (0, 0.5)")
+    if value <= eps:
+        return "low"
+    if value >= 1.0 - eps:
+        return "high"
+    return "interior"
+
+
+def boundary_cell(row: dict[str, Any], *, eps: float = 1e-3) -> BoundaryCell:
+    return (
+        boundary_axis(float(row["lambda_o"]), eps=eps),
+        boundary_axis(float(row["lambda_c"]), eps=eps),
+    )
+
+
+def is_interior_cell(row: dict[str, Any], *, eps: float = 1e-3) -> bool:
+    return boundary_cell(row, eps=eps) == ("interior", "interior")
+
+
+def build_boundary_aware_vocabulary(codebook_size: int) -> BoundaryAwareVocabulary:
+    if codebook_size <= 0:
+        raise ValueError("codebook_size must be positive")
+    boundary_token_offset = codebook_size
+    boundary_tokens = {
+        cell: boundary_token_offset + index for index, cell in enumerate(BOUNDARY_CELLS)
+    }
+    return BoundaryAwareVocabulary(
+        continuous_codebook_size=codebook_size,
+        boundary_token_offset=boundary_token_offset,
+        zero_range_token=boundary_token_offset + len(boundary_tokens),
+        boundary_tokens=boundary_tokens,
+    )
+
+
+def boundary_aware_fit_rows(
+    rows: list[dict[str, Any]], *, eps: float = 1e-3
+) -> list[dict[str, Any]]:
+    return [
+        row
+        for row in finite_shape_rows(rows)
+        if is_interior_cell(row, eps=eps)
+    ]
+
+
+def assign_boundary_aware_tokens(
+    rows: list[dict[str, Any]],
+    *,
+    interior_tokens: np.ndarray,
+    vocabulary: BoundaryAwareVocabulary,
+    eps: float = 1e-3,
+) -> np.ndarray:
+    tokens = np.full(len(rows), -1, dtype=int)
+    interior_index = 0
+    for row_index, row in enumerate(rows):
+        if row["is_zero_range"]:
+            tokens[row_index] = vocabulary.zero_range_token
+            continue
+        cell = boundary_cell(row, eps=eps)
+        if cell == ("interior", "interior"):
+            if interior_index >= len(interior_tokens):
+                raise ValueError("interior_tokens is shorter than the interior row count")
+            tokens[row_index] = int(interior_tokens[interior_index])
+            interior_index += 1
+            continue
+        tokens[row_index] = vocabulary.boundary_tokens[cell]
+
+    if interior_index != len(interior_tokens):
+        raise ValueError("interior_tokens is longer than the interior row count")
+    if np.any(tokens < 0):
+        raise RuntimeError("boundary-aware token assignment left rows unassigned")
+    return tokens
+
+
+def fit_boundary_aware_kmeans(
+    rows: list[dict[str, Any]],
+    *,
+    codebook_size: int,
+    seed: int,
+    split: SplitProtocol | None = None,
+    eps: float = 1e-3,
+) -> tuple[np.ndarray, np.ndarray, BoundaryAwareVocabulary]:
+    vocabulary = build_boundary_aware_vocabulary(codebook_size)
+    interior_rows = boundary_aware_fit_rows(rows, eps=eps)
+    masks = split_masks(interior_rows, split=split)
+    train_rows = [row for row, is_train in zip(interior_rows, masks["train"], strict=True) if is_train]
+    if len(train_rows) < codebook_size:
+        raise ValueError(
+            "not enough train interior rows for boundary-aware kmeans: "
+            f"{len(train_rows)} < {codebook_size}"
+        )
+    interior_vectors = shape_vectors(interior_rows)
+    train_vectors = shape_vectors(train_rows)
+    interior_tokens, interior_recon = fit_kmeans(
+        train_vectors, interior_vectors, codebook_size=codebook_size, seed=seed
+    )
+    all_tokens = assign_boundary_aware_tokens(
+        rows,
+        interior_tokens=interior_tokens,
+        vocabulary=vocabulary,
+        eps=eps,
+    )
+
+    recon = np.full((len(rows), 2), np.nan, dtype=float)
+    interior_index = 0
+    for row_index, row in enumerate(rows):
+        if not row["is_zero_range"] and is_interior_cell(row, eps=eps):
+            recon[row_index] = interior_recon[interior_index]
+            interior_index += 1
+    return all_tokens, recon, vocabulary
 
 
 def shape_vectors(rows: list[dict[str, Any]]) -> np.ndarray:
