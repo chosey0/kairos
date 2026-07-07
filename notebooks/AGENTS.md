@@ -43,6 +43,11 @@ notebooks/
 - `notebooks/runs/` is the reproducible source of experiment outputs.
 - `notebooks/figures/` contains only selected figures promoted for docs, papers,
   reports, or presentations.
+- Result interpretation documents (`RESULTS_EXPLANATION.md`-style writeups) are
+  committed under `docs/candlestick-shape-quantization/results/`, not inside run
+  directories. Each document must state its source run path near the top. Run
+  directories keep only artifacts (config/metrics/figures/tables), which stay
+  local and gitignored.
 - Existing flat run folders, such as `notebooks/runs/00-vq-vae-tokenizer-validation/`,
   are legacy layout. Do not expand the legacy pattern for new experiments.
 

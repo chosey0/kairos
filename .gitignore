@@ -264,3 +264,6 @@ notebooks/runs/**/raw_responses/
 # when they are small and needed for a research decision record.
 notebooks/figures/
 notebooks/figures/**/.ruff_cache/
+
+# Office lock files
+~$*

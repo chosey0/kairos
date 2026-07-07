@@ -27,9 +27,9 @@ VQ-VAE codebook이 반복 가능한 candle shape prototype을 학습하는가?
 | 단계 | Notebook | 상태 | 결과 기록 |
 | --- | --- | --- | --- |
 | Phase 0 데이터 품질 | `00_data_protocol.ipynb` | 완료 | protocol JSON, step-01 run |
-| Phase 1 shape 좌표 | `01_shape_feature_validation.ipynb` | 완료 | `notebooks/runs/.../step-01-shape-feature-validation/FIGURE_EXPLANATION.md` |
-| Phase 2 baseline clustering | `02_tokenizer_baselines.ipynb` | 완료 (D1 6개 + D2 KR 2개) | `notebooks/runs/.../step-02-tokenizer-baselines/RESULTS_EXPLANATION.md` |
-| Phase 3 VQ 계열 검증 | `03_vq_tokenizer.ipynb` | 완료 | `notebooks/runs/.../step-03-vq-tokenizer/all-datasets-multi/cfg-d59bafed/RESULTS_EXPLANATION.md` |
+| Phase 1 shape 좌표 | `01_shape_feature_validation.ipynb` | 완료 | [results/phase-01-step-01-shape-feature-validation.md](results/phase-01-step-01-shape-feature-validation.md) |
+| Phase 2 baseline clustering | `02_tokenizer_baselines.ipynb` | 완료 (D1 6개 + D2 KR 2개) | [results/phase-01-step-02-tokenizer-baselines.md](results/phase-01-step-02-tokenizer-baselines.md) |
+| Phase 3 VQ 계열 검증 | `03_vq_tokenizer.ipynb` | 완료 | [results/phase-01-step-03-vq-final-gate.md](results/phase-01-step-03-vq-final-gate.md) |
 | Phase 4 Baseline 대비 채택 판단 | 문서 판정 | 완료 | main tokenizer는 `kmeans_boundary_aware K=32`, `coarse_fine`은 Phase 3 motif ablation으로 보류 |
 
 Phase 2까지의 핵심 결정: 주 baseline은 `kmeans K=32`(전 dataset·정책에서 최선, dead token 0), boundary는 비교군 B(경계 조합 8개 discrete token + interior-only 연속 codebook), 분봉은 minute split(train 2025-07~2026-01) 적용.
@@ -202,7 +202,7 @@ seeds = 7, 17, 37
 - prototype visualization (cluster shape atlas)
 - seed stability
 
-결과 요약: 8개 dataset(D1 daily 4, D1 KR 1m 2, D2 KR 2) 전부에서 `kmeans K=32`가 최선, dead token 0. 상세는 `notebooks/runs/.../step-02-tokenizer-baselines/RESULTS_EXPLANATION.md`.
+결과 요약: 8개 dataset(D1 daily 4, D1 KR 1m 2, D2 KR 2) 전부에서 `kmeans K=32`가 최선, dead token 0. 상세는 [results/phase-01-step-02-tokenizer-baselines.md](results/phase-01-step-02-tokenizer-baselines.md).
 
 ### Phase 3. VQ 계열 tokenizer 검증
 

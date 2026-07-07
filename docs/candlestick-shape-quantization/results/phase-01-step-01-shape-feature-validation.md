@@ -1,5 +1,7 @@
 # 01 Shape Feature Validation Figure 설명
 
+> 원본 run 위치: `notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/` — 이 문서의 figure/table 링크는 gitignore된 로컬 run 산출물을 가리키므로 로컬 체크아웃에서만 열린다.
+
 이 문서는 `01_shape_feature_validation.ipynb` 실행으로 생성된 figure를 해석하기 위한 메모다. 현재 run은 D1 단계의 단일 지수별 데이터셋을 대상으로, 캔들 shape core인 `(s1, s2) = (logit(lambda_o), logit(lambda_c))` 분포를 확인한다.
 
 ## Feature 정의
@@ -15,7 +17,7 @@
 
 ### 1. 전체 shape core histogram
 
-파일: [shape_core_histogram_overview.png](shape_core_histogram_overview.png)
+파일: [shape_core_histogram_overview.png](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/shape_core_histogram_overview.png)
 
 모든 정상 조회 데이터셋의 `s1`, `s2` 분포를 같은 축에서 비교하는 facet histogram이다. 각 panel은 하나의 dataset을 나타내며, histogram은 density 기준으로 정규화되어 있다. 따라서 y축 높이는 절대 row 수가 아니라 해당 데이터셋 내부의 상대 밀도를 의미한다.
 
@@ -40,10 +42,10 @@
 
 예시:
 
-- [d1_kospi_daily lambda scatter](d1_kospi_daily/cfg-5628106a/run-20260706-134241_seed-7/figures/lambda_scatter.png)
-- [d1_kosdaq_daily lambda scatter](d1_kosdaq_daily/cfg-d17b71e2/run-20260706-134259_seed-7/figures/lambda_scatter.png)
-- [d1_nasdaq_daily lambda scatter](d1_nasdaq_daily/cfg-a8489a0e/run-20260706-134349_seed-7/figures/lambda_scatter.png)
-- [d1_spx_daily lambda scatter](d1_spx_daily/cfg-e28b4a09/run-20260706-134417_seed-7/figures/lambda_scatter.png)
+- [d1_kospi_daily lambda scatter](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_kospi_daily/cfg-5628106a/run-20260706-134241_seed-7/figures/lambda_scatter.png)
+- [d1_kosdaq_daily lambda scatter](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_kosdaq_daily/cfg-d17b71e2/run-20260706-134259_seed-7/figures/lambda_scatter.png)
+- [d1_nasdaq_daily lambda scatter](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_nasdaq_daily/cfg-a8489a0e/run-20260706-134349_seed-7/figures/lambda_scatter.png)
+- [d1_spx_daily lambda scatter](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_spx_daily/cfg-e28b4a09/run-20260706-134417_seed-7/figures/lambda_scatter.png)
 
 이 scatter는 x축에 `lambda_o`, y축에 `lambda_c`를 놓아 캔들 내부에서 open과 close의 상대 위치를 보여준다. 대각선 `lambda_c = lambda_o`를 기준으로 위쪽은 close가 open보다 높은 캔들, 아래쪽은 close가 open보다 낮은 캔들이다.
 
@@ -60,10 +62,10 @@
 
 예시:
 
-- [d1_kospi_daily shape core histogram](d1_kospi_daily/cfg-5628106a/run-20260706-134241_seed-7/figures/shape_core_hist.png)
-- [d1_kosdaq_daily shape core histogram](d1_kosdaq_daily/cfg-d17b71e2/run-20260706-134259_seed-7/figures/shape_core_hist.png)
-- [d1_nasdaq_daily shape core histogram](d1_nasdaq_daily/cfg-a8489a0e/run-20260706-134349_seed-7/figures/shape_core_hist.png)
-- [d1_spx_daily shape core histogram](d1_spx_daily/cfg-e28b4a09/run-20260706-134417_seed-7/figures/shape_core_hist.png)
+- [d1_kospi_daily shape core histogram](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_kospi_daily/cfg-5628106a/run-20260706-134241_seed-7/figures/shape_core_hist.png)
+- [d1_kosdaq_daily shape core histogram](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_kosdaq_daily/cfg-d17b71e2/run-20260706-134259_seed-7/figures/shape_core_hist.png)
+- [d1_nasdaq_daily shape core histogram](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_nasdaq_daily/cfg-a8489a0e/run-20260706-134349_seed-7/figures/shape_core_hist.png)
+- [d1_spx_daily shape core histogram](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/d1_spx_daily/cfg-e28b4a09/run-20260706-134417_seed-7/figures/shape_core_hist.png)
 
 이 histogram은 각 dataset 안에서 `s1 = logit(lambda_o)`와 `s2 = logit(lambda_c)`의 marginal distribution을 따로 보여준다. 이 figure는 tokenizer 입력 차원별로 scaling, winsorization, boundary flag 정책이 적절한지 확인하는 용도다.
 

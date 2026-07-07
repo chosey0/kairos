@@ -1,6 +1,8 @@
 # KR Dataset 병합 분포 유지 검증 (미니스텝)
 
-D2 단계로 넘어가기 전, KR dataset을 병합했을 때 shape core `(s1, s2)` 분포가 유지되는지 확인한 미니스텝 기록이다 (2026-07-06). 입력은 step-01 feature run의 `shape_sample.csv`이며, zero-range row는 pipeline 규약대로 제외했다. 재현 스크립트는 [make_figures.py](make_figures.py)다.
+> 원본 run 위치: `notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/merge-distribution-check/` — 이 문서의 figure/table 링크는 gitignore된 로컬 run 산출물을 가리키므로 로컬 체크아웃에서만 열린다.
+
+D2 단계로 넘어가기 전, KR dataset을 병합했을 때 shape core `(s1, s2)` 분포가 유지되는지 확인한 미니스텝 기록이다 (2026-07-06). 입력은 step-01 feature run의 `shape_sample.csv`이며, zero-range row는 pipeline 규약대로 제외했다. 재현 스크립트는 [make_figures.py](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/merge-distribution-check/make_figures.py)다.
 
 ## 방법
 
@@ -10,9 +12,9 @@ D2 단계로 넘어가기 전, KR dataset을 병합했을 때 shape core `(s1, s
 
 ## Figure
 
-- [kr_daily 병합](merge-check__kr_daily__s1-s2-density.png)
-- [kr_1m 병합](merge-check__kr_1m__s1-s2-density.png)
-- [kr_all 병합](merge-check__kr_all__s1-s2-density.png)
+- [kr_daily 병합](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/merge-distribution-check/merge-check__kr_daily__s1-s2-density.png)
+- [kr_1m 병합](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/merge-distribution-check/merge-check__kr_1m__s1-s2-density.png)
+- [kr_all 병합](../../../notebooks/runs/candlestick-shape-quantization/phase-01-shape-tokenizer/step-01-shape-feature-validation/merge-distribution-check/merge-check__kr_all__s1-s2-density.png)
 
 검은 점선이 병합 분포, 색 실선이 성분 dataset이다. y축은 density이므로 row 수 차이는 반영되지 않는다.
 
