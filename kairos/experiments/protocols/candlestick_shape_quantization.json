@@ -1,0 +1,211 @@
+{
+  "research": {
+    "name": "candlestick-shape-quantization",
+    "phases": {
+      "data_protocol": "phase-00-data-protocol",
+      "shape_tokenizer": "phase-01-shape-tokenizer"
+    },
+    "steps": {
+      "index_universe_and_split": "step-01-index-universe-and-split",
+      "shape_feature_validation": "step-01-shape-feature-validation",
+      "tokenizer_baselines": "step-02-tokenizer-baselines"
+    },
+    "source_notebook": "notebooks/candlestick-shape-quantization/00_data_protocol.ipynb"
+  },
+  "dates": {
+    "domestic_kiwoom_start_date": "1990-01-01",
+    "domestic_kiwoom_start_datetime": "1990-01-01 000000",
+    "kis_earliest_start_date": "1900-01-01",
+    "kis_earliest_start_datetime": "1900-01-01 00:00:00",
+    "research_end_date": "2026-07-03"
+  },
+  "data_source_policy": {
+    "domestic_index_provider": "kiwoom",
+    "overseas_index_provider": "kis",
+    "fallback_provider": null
+  },
+  "broker_methods": {
+    "kiwoom": {
+      "period_method": "client.domestic.chart.industry_daily",
+      "minute_method": "client.domestic.chart.industry_minute"
+    },
+    "kis": {
+      "period_method": "client.overseas.chart.major_index",
+      "minute_method": "client.overseas.chart.index_minute"
+    }
+  },
+  "split": {
+    "train_start": "2005-01-01",
+    "train_end": "2016-12-31",
+    "validation_start": "2017-01-01",
+    "validation_end": "2020-12-31",
+    "test_start": "2021-01-01",
+    "test_end": null,
+    "embargo_days": 20,
+    "label_horizons": [
+      1,
+      5,
+      20
+    ],
+    "rolling_statistics_rule": "statistics for row t use only rows <= t-1; model fit uses train split only",
+    "random_split_forbidden": true
+  },
+  "split_minute": {
+    "train_start": "2025-07-01",
+    "train_end": "2026-01-31",
+    "validation_start": "2026-02-01",
+    "validation_end": "2026-04-30",
+    "test_start": "2026-05-01",
+    "test_end": null,
+    "embargo_days": 20,
+    "label_horizons": [
+      1,
+      5,
+      20
+    ],
+    "rolling_statistics_rule": "statistics for row t use only rows <= t-1; model fit uses train split only",
+    "random_split_forbidden": true,
+    "note": "Minute-track split fixed on 2026-07-06; provider minute history starts 2025-07 so the daily split leaves zero train rows."
+  },
+  "symbols": {
+    "KOSPI": {
+      "name": "KOSPI Composite Index",
+      "country": "KR",
+      "source": {
+        "provider": "kiwoom",
+        "period_symbol": "001",
+        "minute_symbol": "001",
+        "note": "Kiwoom KOSPI industry/index code"
+      }
+    },
+    "KOSDAQ": {
+      "name": "KOSDAQ Composite Index",
+      "country": "KR",
+      "source": {
+        "provider": "kiwoom",
+        "period_symbol": "101",
+        "minute_symbol": "101",
+        "note": "Kiwoom KOSDAQ industry/index code"
+      }
+    },
+    "NASDAQ": {
+      "name": "NASDAQ Composite Index",
+      "country": "US",
+      "source": {
+        "provider": "kis",
+        "period_symbol": "COMP",
+        "minute_symbol": "COMP",
+        "master_symbol": "COMP"
+      }
+    },
+    "SPX": {
+      "name": "S&P 500 Index",
+      "country": "US",
+      "source": {
+        "provider": "kis",
+        "period_symbol": "SPX",
+        "minute_symbol": "SPX",
+        "note": "KIS README uses SPX for index_minute examples",
+        "master_symbol": "SPX"
+      }
+    },
+    "DJI": {
+      "name": "Dow Jones Industrial Average",
+      "country": "US",
+      "source": {
+        "provider": "kis",
+        "period_symbol": "DJI",
+        "minute_symbol": "DJI",
+        "note": "KIS README uses .DJI for major_index examples",
+        "master_symbol": "DJI"
+      }
+    }
+  },
+  "datasets": {
+    "d1": {
+      "symbols": [
+        "KOSPI",
+        "KOSDAQ",
+        "NASDAQ",
+        "SPX",
+        "DJI"
+      ],
+      "intervals": [
+        "1d",
+        "1m"
+      ]
+    },
+    "groups": [
+      {
+        "dataset_id": "d2_kr-kospi-kosdaq_daily",
+        "stage": "D2",
+        "interval": "1d",
+        "market_group": "kr-major",
+        "symbols": [
+          "KOSPI",
+          "KOSDAQ"
+        ],
+        "purpose": "Country-level cross-index generalization in Korea (daily track)."
+      },
+      {
+        "dataset_id": "d2_kr-kospi-kosdaq_1m",
+        "stage": "D2",
+        "interval": "1m",
+        "market_group": "kr-major",
+        "symbols": [
+          "KOSPI",
+          "KOSDAQ"
+        ],
+        "purpose": "Country-level cross-index generalization in Korea (minute track, minute split)."
+      },
+      {
+        "dataset_id": "d2_us-nasdaq-spx-dji_daily",
+        "stage": "D2",
+        "interval": "1d",
+        "market_group": "us-major",
+        "symbols": [
+          "NASDAQ",
+          "SPX",
+          "DJI"
+        ],
+        "purpose": "US master-validated major-index generalization (daily track)."
+      },
+      {
+        "dataset_id": "d3_global-major_daily",
+        "stage": "D3",
+        "interval": "1d",
+        "market_group": "global-major",
+        "symbols": [
+          "NASDAQ",
+          "SPX",
+          "DJI",
+          "KOSPI",
+          "KOSDAQ"
+        ],
+        "purpose": "Global major stock-index dataset for transfer and held-out-index evaluation."
+      }
+    ]
+  },
+  "feature_protocol": {
+    "shape_core": "logit_lambda_o_logit_lambda_c",
+    "eps": 0.001,
+    "atr_period": 14,
+    "include_volume": false
+  },
+  "filtering_protocol": {
+    "zero_range_policy": "special_token_and_count",
+    "boundary_policy": "winsorize_flag",
+    "vix_in_main_set": false
+  },
+  "user_vars": {
+    "max_rows": null,
+    "network_download_enabled": false
+  },
+  "manifest": {
+    "required_outputs": [
+      "experiment_config.json",
+      "metrics.json",
+      "manifest.json"
+    ]
+  }
+}

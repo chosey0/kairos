@@ -2,14 +2,14 @@ from math import log
 
 import pytest
 
-from kairos.features import (
+from kairos.core.features import (
     DEFAULT_EPS,
     expit,
     extract_features,
     extract_shape,
     logit,
 )
-from kairos.data import CandleBar
+from kairos.core.data import CandleBar
 
 
 def make_candle(
@@ -122,7 +122,7 @@ class TestTrainGuard:
     def test_train_rejects_zero_range_shapes(self):
         from pathlib import Path
 
-        from kairos.train import TrainConfig, train
+        from kairos.core.train import TrainConfig, train
 
         shapes = [extract_shape(make_candle(1, open_=1.0, high=1.0, low=1.0, close=1.0))]
         with pytest.raises(ValueError, match="zero-range"):

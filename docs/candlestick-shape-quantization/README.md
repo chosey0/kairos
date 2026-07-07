@@ -45,6 +45,11 @@ Phase 5: 예측 유용성 평가
 Phase 6: 결론 정리
 ```
 
+Phase 0 구현 계약:
+- 프로토콜 설정 source of truth는 `kairos/experiments/protocols/candlestick_shape_quantization.json`이다.
+- `kairos.experiments.protocol`은 JSON을 로드해 split, symbol registry, dataset registry, manifest scaffold를 생성한다.
+- 해외지수 symbol은 KIS `download_overseas_index_info()` master 정보로 검증하고, master 검증을 통과한 universe만 기본 set에 포함한다.
+
 Tokenizer 검증의 순수 구조:
 
 ```text

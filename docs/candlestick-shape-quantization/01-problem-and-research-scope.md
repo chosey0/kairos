@@ -59,7 +59,9 @@ OHLC를 가격 자체로 보지 않고 `high-low range` 안의 상대 좌표로 
 포함 범위:
 - 주요 주가 지수의 일봉 또는 분봉 OHLC 데이터
   - 단계적 확장: 단일 지수 -> 국가별 주요 지수 -> 세계 주요 지수 ([08](08-research-roadmap.md) Phase 0 참조)
-  - 최종 대상 index universe: `IXIC`, `SPX`, `DJI`, `RUT`, `KS11`, `KQ11`, `N225`, `NDX`, `SOX`, `GSPC`, `TWII` (VIX는 별도 분석 set)
+  - 기본 index universe: `KOSPI`, `KOSDAQ`, `NASDAQ`, `SPX`, `DJI`, `N225`, `NDX`, `SOX`, `TWII`
+  - D1 기본 대상: `KOSPI`, `KOSDAQ`, `NASDAQ`, `SPX`, `DJI`, `NDX`, `SOX`의 일봉/분봉
+  - 해외지수는 KIS `download_overseas_index_info()` master 정보로 검증하며, master 검증 전까지 `NYSE`, `AMEX`, `RUT`, `VIX`는 기본 universe에 포함하지 않는다.
 - OHLC 기반 shape tokenization
 - token sequence 기반 multi-candle motif vocabulary 학습
 - shape token과 continuous side-channel(rel_range, gap)의 분리 평가

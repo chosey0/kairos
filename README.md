@@ -25,21 +25,18 @@ OHLC
 데이터는 3단계로 확장한다.
 
 ```text
-D1. 단일 지수 (KS11/KQ11/IXIC/GSPC/DJI 중 1개)   파이프라인·설계 확정
-D2. 국가별 주요 지수 (미국 또는 한국)              같은 시장 내 일반화 검증
-D3. 세계 주요 지수 (11개 universe)                cross-market transfer 검증
+D1. 단일 지수 (KOSPI/KOSDAQ/NASDAQ/SPX/DJI/NDX/SOX)  파이프라인·설계 확정
+D2. 국가별 주요 지수 (한국, 미국 master-validated)       같은 시장 내 일반화 검증
+D3. 세계 주요 지수 (9개 master-validated universe)       cross-market transfer 검증
 ```
 
 ## 저장소 구조
 
 ```text
 kairos/       연구 파이프라인 패키지
-                data.py              캔들 필터링, 시간 기준 split
-                features.py          shape core와 side-channel 추출
-                model.py             VQ-VAE tokenizer
-                train.py             tokenizer 학습
-                shape_metrics.py     token utilization/consistency 지표
-                sequence_metrics.py  token sequence 지표
+                core/                캔들 계약, feature 추출, 모델, metric, 학습 helper
+                experiments/         protocol JSON, artifact helper, 단계별 실험 로직
+                sources/             read-only market-data access helper
 tests/        leakage-sensitive 순수 함수 단위 테스트
 notebooks/    실험 노트북과 run 산출물
                 candlestick-shape-quantization/   노트북 소스 (00 -> 05 순서 실행)
@@ -61,13 +58,13 @@ uv run --with pytest pytest -q   # 단위 테스트
 feature 추출 예시:
 
 ```python
-from kairos.features import extract_features, extract_shape
+from kairos.core.features import extract_features, extract_shape
 
 shape = extract_shape(candle)          # 단일 캔들 -> ShapeFeatures (s1, s2, 경계 flag)
 rows = extract_features(candles)       # 시계열 -> shape core + rel_range/gap 채널
 ```
 
-실험 노트북은 `notebooks/candlestick-shape-quantization/`의 번호 순서대로 실행한다. run 산출물 규약은 [notebooks/AGENTS.md](notebooks/AGENTS.md)를 따른다.
+실험 노트북은 `notebooks/candlestick-shape-quantization/`의 번호 순서대로 실행한다. Phase 0 프로토콜 설정은 `kairos/experiments/protocols/candlestick_shape_quantization.json`을 source of truth로 사용한다. run 산출물 규약은 [notebooks/AGENTS.md](notebooks/AGENTS.md)를 따른다.
 
 ## 문서 안내
 

@@ -17,6 +17,10 @@ class TokenUtilization:
     entropy: float
     histogram: dict[int, int]
 
+    @property
+    def effective_vocab_size(self) -> float:
+        return 2**self.entropy
+
 
 def token_utilization(tokens: Iterable[int], *, codebook_size: int) -> TokenUtilization:
     """Measure Phase 1 codebook usage for shape quantization."""

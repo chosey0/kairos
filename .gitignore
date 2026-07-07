@@ -228,3 +228,39 @@ __marimo__/
 # Generated fractal event plots
 *.env
 references/
+
+# Local market data and broker artifacts
+raw/
+raw_data/
+data/raw/
+broker_responses/
+raw_responses/
+*.parquet
+*.feather
+*.pkl
+*.pickle
+*.db
+*.sqlite
+*.sqlite3
+
+# Experiment outputs are local by default. Commit only curated summaries or
+# figures by explicitly staging them with git add -f when they are small and
+# needed for a research decision record.
+notebooks/runs/
+notebooks/runs/**/.ruff_cache/
+notebooks/runs/**/*.csv
+notebooks/runs/**/*.jsonl
+notebooks/runs/**/*.parquet
+notebooks/runs/**/*.pkl
+notebooks/runs/**/*.pickle
+notebooks/runs/**/*.pt
+notebooks/runs/**/*.pth
+notebooks/runs/**/*.ckpt
+notebooks/runs/**/checkpoints/
+notebooks/runs/**/raw/
+notebooks/runs/**/raw_responses/
+
+# Notebook-exported figures are local by default. Force-add selected figures only
+# when they are small and needed for a research decision record.
+notebooks/figures/
+notebooks/figures/**/.ruff_cache/

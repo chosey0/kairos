@@ -133,6 +133,11 @@ Include at least:
   "dataset_stage": "D1",
   "symbols": ["^IXIC"],
   "interval": "1d",
+  "data_source_policy": {
+    "domestic_index_provider": "kiwoom",
+    "overseas_index_provider": "kis",
+    "fallback_provider": null
+  },
   "split": {
     "train_end": "YYYY-MM-DD",
     "validation_end": "YYYY-MM-DD",
@@ -161,9 +166,9 @@ Config hash rules:
 - Hash canonical JSON with sorted keys.
 - Exclude volatile fields such as wall-clock start time, hostname, absolute local
   paths, runtime duration, and random seed.
-- Include dataset selection, symbol mapping, interval, split boundaries, feature
-  parameters, model parameters, tokenizer parameters, filtering rules, and
-  user-defined variables.
+- Include dataset selection, broker source mapping, interval, split boundaries,
+  feature parameters, model parameters, tokenizer parameters, filtering rules,
+  and user-defined variables.
 - Store the canonical machine-readable config as `config.json`.
 - Store a human-friendly copy as `config_readable.yaml` when practical.
 - Seeds create separate `run-*` directories under the same `cfg-*` directory.
@@ -202,10 +207,26 @@ Recommended dataset folder:
 Examples:
 
 ```text
+d1_kospi_daily
 d1_ixic_daily
-d2_us-major_daily
+d2_kr-kospi-kosdaq_daily
+d2_us-nasdaq-nyse-amex_daily
+d3_global-major_daily
 d3_global-major_weekly
 ```
+
+Use the data stages consistently:
+
+- `d1_*`: one stock index per dataset/run.
+- `d2_*`: n stock indexes from one country or market group per dataset/run.
+- `d3_global-major_*`: all selected global major stock indexes in one dataset.
+
+Data source naming is fixed for this research:
+
+- Domestic Korean indexes use Kiwoom broker-modules APIs.
+- Overseas indexes use KIS broker-modules APIs.
+- Any yfinance use must be labeled as fallback/comparison and must not replace
+  the primary source in run configs.
 
 Recommended figure filename:
 

@@ -20,12 +20,11 @@ access helpers for research.
 
 ```text
 kairos/   Research pipeline package:
-            data.py              candle contracts, filtering, split helpers
-            features.py          candle shape core and side-channel extraction
-            model.py             VQ-VAE tokenizer components
-            train.py             tokenizer training entry points
-            shape_metrics.py     shape reconstruction/vocabulary metrics
-            sequence_metrics.py  token sequence and motif metrics
+            core/                pure contracts, feature transforms, metrics,
+                                 tokenizer model, and training helpers
+            experiments/         research protocols, artifact helpers, and
+                                 step-specific experiment logic
+            sources/             read-only external market-data access helpers
 tests/    Focused unit tests for leakage-sensitive pure functions
 notebooks/ Experimental research notebooks. Outputs live under
             notebooks/runs/<experiment-name>/
@@ -85,7 +84,8 @@ uv run --with ruff ruff check .
 ```
 
 Python 3.12 or newer is required. Core research dependencies include `torch`,
-`scikit-learn`, `yfinance`, `plotly`, and `matplotlib`.
+`scikit-learn`, `plotly`, and `matplotlib`. `yfinance` may remain available for
+ad hoc comparison, but it is not the primary research data source.
 
 For package changes, update `pyproject.toml` through `uv add` / `uv remove` when
 practical, then refresh `uv.lock`.
@@ -98,9 +98,11 @@ practical, then refresh `uv.lock`.
 - Keep durable experiment summaries small and reviewable: `experiment_config.json`,
   `metrics.json`, and selected figures/tables under
   `notebooks/runs/<experiment-name>/`.
-- yfinance index symbols need explicit mapping when source notation differs.
-  In particular, map `^SPX` to Yahoo's `^GSPC` and record the mapping in the run
-  config.
+- Research index data source is fixed: domestic Korean index data comes from
+  Kiwoom, and overseas index data comes from KIS. Record broker method names,
+  broker symbols/codes, and credential environment assumptions in the run
+  config. Use yfinance only as an explicitly labeled fallback or comparison
+  source.
 - If extracting PDF text locally, prefer Python tooling such as `pypdf`; do not
   assume poppler is installed.
 
@@ -121,10 +123,12 @@ These are roadmap decisions and must not be changed casually.
   lower, and center features are derived reporting/visualization fields only.
   `rel_range`, `gap`, and `vol_spike` are separate continuous side channels and
   must not be mixed into the shape token.
-- **Stage expansion.** Follow D1(single index) -> D2(major indexes within one
-  country) -> D3(global major indexes). Feature definitions, split protocol, and
-  evaluation metrics fixed in D1 must carry forward. If they change, rerun from
-  D1. Keep VIX out of the main set.
+- **Stage expansion.** Follow D1(single stock index, each index as its own
+  dataset) -> D2(country-level stock index groups, such as KOSPI/KOSDAQ or
+  NASDAQ/NYSE/AMEX representative indexes) -> D3(global major stock indexes as a
+  combined dataset). Feature definitions, split protocol, and evaluation metrics
+  fixed in D1 must carry forward. If they change, rerun from D1. Keep VIX out of
+  the main set.
 - **Exceptional candles.** `high == low` zero-range candles get a special token
   and must be counted. Boundary candles such as marubozu use winsorize +
   boundary flags by default, with exclusion compared and recorded when relevant.
